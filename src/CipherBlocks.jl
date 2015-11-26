@@ -8,8 +8,7 @@ type ECB
     key::Array{UInt8}
     encryptFunction::Function
     decryptFunction::Function
-    ECB(blocksize, data, key, encryptFunction, decryptFunction) = 
-    new(blocksize/8, data, key, encryptFunction, decryptFunction)
+    ECB(blocksize, data, key, encryptFunction, decryptFunction) = new(blocksize/8, data, key, encryptFunction, decryptFunction)
 end
 
 type CBC
@@ -33,14 +32,14 @@ type CFB
 end
 
 function encrypt(blocktype::CipherBlocks.ECB)
-    blockCount = ceil(length(blocktype.data) / blocktype.blocksize)
+    blockCount = Int(ceil(length(blocktype.data) / blocktype.blocksize))
     encryptedData = Array{UInt8}(0)
     for cnt in 1:blockCount
         if(cnt * blocktype.blocksize < length(blocktype.data))
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
+            dataBlock = blocktype.data[((cnt-1) * blocktype.blocksize) + 1 : cnt * blocktype.blocksize]
             append!(encryptedData, blocktype.encryptFunction(dataBlock, blocktype.key))
         else
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : end]
+            dataBlock = blocktype.data[((cnt-1) * blocktype.blocksize) + 1 : end]
             append!(dataBlock, [1;zeros(UInt8, (blocktype.blocksize-length(dataBlock)-1))])
             append!(encryptedData, blocktype.encryptFunction(dataBlock, blocktype.key))
         end
@@ -48,122 +47,110 @@ function encrypt(blocktype::CipherBlocks.ECB)
     return encryptedData
 end
 
-function decrypt(blocktype::CipherBlocks.ECB)
-    blockCount = ceil(length(blocktype.data) / blocktype.blocksize)
+function decrypt(blocktype::CipherBlocks.ECB, encryptedData::Array{UInt8})
+    blockCount = Int(ceil(length(encryptedData) / blocktype.blocksize))
     decryptedData = Array{UInt8}(0)
     for cnt in 1:blockCount
         if(cnt * blocktype.blocksize < length(blocktype.data))
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
+            dataBlock = encryptedData[((cnt-1) * blocktype.blocksize) + 1 : cnt * blocktype.blocksize]
         else
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : end]
+            dataBlock = encryptedData[((cnt-1) * blocktype.blocksize) + 1 : end]
         end
         append!(decryptedData, blocktype.encryptFunction(dataBlock, blocktype.key))
     end
-    if(length(decryptedData) < blockCount*blocktype.blocksize)
-        append!(decryptedData, zeros(UInt8, convert(Int,((blockCount*blocktype.blocksize)-length(decryptedData)))))
-    end
+    decryptedData = decryptedData[1:length(blocktype.data)]
     return decryptedData
 end
 
 function encrypt(blocktype::CipherBlocks.CBC)
-    blockCount = ceil(length(blocktype.data) / blocktype.blocksize)
+    blockCount = Int(ceil(length(blocktype.data) / blocktype.blocksize))
     encryptedData = Array{UInt8}(0)
     dataBlock = blocktype.data[1 : blocktype.blocksize]
     dataBlock = dataBlock $ blocktype.initialVector
-    append!(encryptedData, blocktype.encryptFunction(dataBlock, blocktype.key))
+    encryptedBlock = blocktype.encryptFunction(dataBlock, blocktype.key)
+    append!(encryptedData, encryptedBlock)
     for cnt in 2:blockCount
         if(cnt * blocktype.blocksize < length(blocktype.data))
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
-            dataBlock = dataBlock $ encryptedData[cnt-1]
+            dataBlock = blocktype.data[((cnt-1) * blocktype.blocksize) + 1 : cnt * blocktype.blocksize]
+            dataBlock $= encryptedBlock
         else            
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : end]
-            dataBlock = dataBlock $ encryptedData[cnt-1]
+            dataBlock = blocktype.data[((cnt-1) * blocktype.blocksize) + 1 : end]
+            append!(dataBlock, [1;zeros(UInt8, (blocktype.blocksize-length(dataBlock)-1))])
+            dataBlock $= encryptedBlock
         end
-        append!(encryptedData, blocktype.encryptFunction(dataBlock, blocktype.key))
-    end
-    if(length(encryptedData) < blockCount*blocktype.blocksize)
-        append!(encryptedData, zeros(UInt8, convert(Int,((blockCount*blocktype.blocksize)-length(encryptedData)))))
-        encryptedData[length(blocktype.data)+1] = 1;
+        encryptedBlock = blocktype.encryptFunction(dataBlock, blocktype.key)
+        append!(encryptedData, encryptedBlock)
     end
     return encryptedData
 end
 
-function decrypt(blocktype::CipherBlocks.CBC)
-    blockCount = ceil(length(blocktype.data) / blocktype.blocksize)
+function decrypt(blocktype::CipherBlocks.CBC, encryptedData::Array{UInt8})
+    blockCount = Int(ceil(length(encryptedData) / blocktype.blocksize))
     decryptedData = Array{UInt8}(0)
-    dataBlock = blocktype.data[1 : blocktype.blocksize]
-    dataBlock = blocktype.encryptFunction(dataBlock, blocktype.key) $ blocktype.initialVector
+    dataBlock = encryptedData[1 : blocktype.blocksize]
+    dataBlock = blocktype.decryptFunction(dataBlock, blocktype.key) $ blocktype.initialVector
     append!(decryptedData, dataBlock)
     for cnt in 2:blockCount
         if(cnt * blocktype.blocksize < length(blocktype.data))
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
-            xorvec = blocktype.data[((cnt-1) * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
-            dataBlock = blocktype.decryptFunction(dataBlock, blocktype,key) $ xorvec
+            dataBlock = encryptedData[((cnt-1) * blocktype.blocksize)+1 : cnt * blocktype.blocksize]
+            xorvec = encryptedData[((cnt-2) * blocktype.blocksize)+1 : (cnt-1) * blocktype.blocksize]
+            dataBlock = blocktype.decryptFunction(dataBlock, blocktype.key) $ xorvec
         else            
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : end]
-            xorvec = blocktype.data[((cnt-1) * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
-            dataBlock = blocktype.decryptFunction(dataBlock, blocktype,key) $ xorvec
+            dataBlock = encryptedData[((cnt-1) * blocktype.blocksize)+1 : end]
+            xorvec = encryptedData[((cnt-2) * blocktype.blocksize)+1 : (cnt-1) * blocktype.blocksize]
+            dataBlock = blocktype.decryptFunction(dataBlock, blocktype.key) $ xorvec
         end
-        append!(encryptedData, dataBlock)
+        append!(decryptedData, dataBlock)
     end
-    if(length(decryptedData) < blockCount*blocktype.blocksize)
-        append!(decryptedData, zeros(UInt8, convert(Int,((blockCount*blocktype.blocksize)-length(decryptedData)))))
-        decryptedData[length(blocktype.data)+1] = 1;
-    end
+    decryptedData = decryptedData[1:length(blocktype.data)]
     return decryptedData
 end
 
 function encrypt(blocktype::CipherBlocks.CFB)
-    blockCount = ceil(length(blocktype.data) / blocktype.blocksize)
+    blockCount = Int(ceil(length(blocktype.data) / blocktype.blocksize))
     encryptedData = Array{UInt8}(0)
     dataBlock = blocktype.data[1 : blocktype.blocksize]
-    xorvec = blocktype.encryptFunction(blocktype.initialVector)
+    xorvec = blocktype.encryptFunction(blocktype.initialVector, blocktype.key)
     dataBlock = dataBlock $ xorvec
     append!(encryptedData, dataBlock)
     for cnt in 2:blockCount
         if(cnt * blocktype.blocksize < length(blocktype.data))
-            xorvec = blocktype.encryptedFunction(dataBlock)
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
+            xorvec = blocktype.encryptFunction(dataBlock, blocktype.key)
+            dataBlock = blocktype.data[((cnt-1) * blocktype.blocksize) + 1 : cnt * blocktype.blocksize]
             dataBlock = dataBlock $ xorvec
         else     
-            xorvec = blocktype.encryptedFunction(dataBlock)       
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : end]
+            xorvec = blocktype.encryptFunction(dataBlock, blocktype.key)       
+            dataBlock = blocktype.data[((cnt-1) * blocktype.blocksize) + 1 : end]
+            append!(dataBlock, [1;zeros(UInt8, (blocktype.blocksize-length(dataBlock)-1))])
             dataBlock = dataBlock $ xorvec
         end
         append!(encryptedData, dataBlock)
-    end
-    if(length(encryptedData) < blockCount*blocktype.blocksize)
-        append!(encryptedData, zeros(UInt8, convert(Int,((blockCount*blocktype.blocksize)-length(encryptedData)))))
-        encryptedData[length(blocktype.data)+1] = 1;
     end
     return encryptedData
 end
 
-function decrypt(blocktype::CipherBlocks.CFB)
-    blockCount = ceil(length(blocktype.data) / blocktype.blocksize)
+function decrypt(blocktype::CipherBlocks.CFB, encryptedData::Array{UInt8})
+    blockCount = Int(ceil(length(encryptedData) / blocktype.blocksize))
     decryptedData = Array{UInt8}(0)
-    dataBlock = blocktype.data[1 : blocktype.blocksize]
-    xorvec = blocktype.decryptFunction(blocktype.initialVector)
+    dataBlock = encryptedData[1 : blocktype.blocksize]
+    xorvec = blocktype.decryptFunction(blocktype.initialVector, blocktype.key)
     dataBlock = dataBlock $ xorvec
     append!(decryptedData, dataBlock)
     for cnt in 2:blockCount
         if(cnt * blocktype.blocksize < length(blocktype.data))
-            xorvec = blocktype.data[((cnt-1) * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
-            xorvec = blocktype.decryptFunction(xorvec)
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
+            xorvec = encryptedData[((cnt-2) * blocktype.blocksize) + 1 : (cnt-1) * blocktype.blocksize]
+            xorvec = blocktype.decryptFunction(xorvec, blocktype.key)
+            dataBlock = encryptedData[((cnt-1) * blocktype.blocksize) + 1 : cnt * blocktype.blocksize]
             dataBlock = dataBlock $ xorvec
         else        
-            xorvec = blocktype.data[((cnt-1) * blocktype.blocksize) - blocktype.blocksize + 1 : cnt * blocktype.blocksize]
-            xorvec = blocktype.decryptFunction(xorvec)
-            dataBlock = blocktype.data[(cnt * blocktype.blocksize) - blocktype.blocksize + 1 : end]
+            xorvec = encryptedData[((cnt-2) * blocktype.blocksize) + 1 : (cnt-1) * blocktype.blocksize]
+            xorvec = blocktype.decryptFunction(xorvec, blocktype.key)
+            dataBlock = encryptedData[((cnt-1) * blocktype.blocksize) + 1 : end]
             dataBlock = dataBlock $ xorvec
         end
-        append!(encryptedData, dataBlock)
+        append!(decryptedData, dataBlock)
     end
-    if(length(decryptedData) < blockCount * blocktype.blocksize)
-        append!(decryptedData, zeros(UInt8, convert(Int,((blockCount*blocktype.blocksize)-length(decryptedData)))))
-        decryptedData[length(blocktype.data)+1] = 1;
-    end
+    decryptedData = decryptedData[1:length(blocktype.data)]
     return decryptedData
 end
 
