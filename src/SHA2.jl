@@ -41,7 +41,7 @@ type SHA256
 
     message::Array{UInt8}
     
-    SHA256(message::ASCIIString; file::Bool=false)=begin
+    SHA256(message::ASCIIString; file::Bool=true)=begin
         local mh::Array{UInt32}=zeros(UInt8,8)
         mh[1] = 0x6a09e667
         mh[2] = 0xbb67ae85
