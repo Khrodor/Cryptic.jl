@@ -20,7 +20,11 @@ function encrypt(blocktype::CipherBlocks.ECB)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    key = blocktype.encryptionType.key
+    if(typeof(blocktype.encryptrionType) == AES)
+        key = blocktype.encryptionType.enckey
+    else
+        key = blocktype.encryptionType.key
+    end
     encryptedData = Array{UInt8}(0)
     for cnt in 1:blockCount
         if(cnt * blocksizeinbytes < length(databuffer))
@@ -39,7 +43,11 @@ function decrypt(blocktype::CipherBlocks.ECB)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    key = blocktype.encryptionType.key
+    if(typeof(blocktype.encryptrionType) == AES)
+        key = blocktype.encryptionType.deckey
+    else
+        key = blocktype.encryptionType.key
+    end
     decryptedData = Array{UInt8}(0)
     for cnt in 1:blockCount
         dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : cnt * blocksizeinbytes]
@@ -52,7 +60,11 @@ function encrypt(blocktype::CipherBlocks.CBC)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    key = blocktype.encryptionType.key
+    if(typeof(blocktype.encryptrionType) == AES)
+        key = blocktype.encryptionType.enckey
+    else
+        key = blocktype.encryptionType.key
+    end
     encryptedData = Array{UInt8}(0)
     dataBlock = databuffer[1 : blocksizeinbytes]
     dataBlock = dataBlock $ blocktype.initialVector
@@ -77,7 +89,11 @@ function decrypt(blocktype::CipherBlocks.CBC)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    key = blocktype.encryptionType.key
+    if(typeof(blocktype.encryptrionType) == AES)
+        key = blocktype.encryptionType.deckey
+    else
+        key = blocktype.encryptionType.key
+    end
     decryptedData = Array{UInt8}(0)
     dataBlock = databuffer[1 : blocksizeinbytes]
     dataBlock = blocktype.encryptionType.decrypt(dataBlock, key) $ blocktype.initialVector
@@ -95,7 +111,11 @@ function encrypt(blocktype::CipherBlocks.CFB)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    key = blocktype.encryptionType.key
+    if(typeof(blocktype.encryptrionType) == AES)
+        key = blocktype.encryptionType.enckey
+    else
+        key = blocktype.encryptionType.key
+    end
     encryptedData = Array{UInt8}(0)
     dataBlock = databuffer[1 : blocktype.blocksize]
     xorvec = blocktype.encryptionType.encrypt(blocktype.initialVector, key)
@@ -121,7 +141,11 @@ function decrypt(blocktype::CipherBlocks.CFB)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    key = blocktype.encryptionType.key
+    if(typeof(blocktype.encryptrionType) == AES)
+        key = blocktype.encryptionType.deckey
+    else
+        key = blocktype.encryptionType.key
+    end
     decryptedData = Array{UInt8}(0)
     dataBlock = databuffer[1 : blocksizeinbytes]
     xorvec = blocktype.encryptionType.decrypt(blocktype.initialVector, key)
