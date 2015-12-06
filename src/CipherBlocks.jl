@@ -1,5 +1,10 @@
 
+include("Cryptic.jl")
+
 module CipherBlocks
+
+using Cryptic.AES
+
 export ECB, CBC, CFB, encrypt, decrypt
 
 type ECB 
@@ -17,10 +22,10 @@ type CFB
 end
 
 function encrypt(blocktype::CipherBlocks.ECB)
-    blocksizeinbytes = blocktype.encryptionType.bits / 8
+    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.enckey
     else
         key = blocktype.encryptionType.key
@@ -29,21 +34,20 @@ function encrypt(blocktype::CipherBlocks.ECB)
     for cnt in 1:blockCount
         if(cnt * blocksizeinbytes < length(databuffer))
             dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : cnt * blocksizeinbytes]
-            append!(encryptedData, blocktype.encryptionType.encrypt(dataBlock, key))
-        else
+         else
             dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : end]
             append!(dataBlock, [1;zeros(UInt8, (blocksizeinbytes-length(dataBlock)-1))])
-            append!(encryptedData, blocktype.encryptionType.encrypt(dataBlock, key))
         end
+        append!(encryptedData, blocktype.encryptionType.encrypt(dataBlock, key))
     end
     blocktype.encryptionType.buffer = encryptedData
 end
 
 function decrypt(blocktype::CipherBlocks.ECB)
-    blocksizeinbytes = blocktype.encryptionType.bits / 8
+    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.deckey
     else
         key = blocktype.encryptionType.key
@@ -53,14 +57,14 @@ function decrypt(blocktype::CipherBlocks.ECB)
         dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : cnt * blocksizeinbytes]
         append!(decryptedData, blocktype.encryptionType.decrypt(dataBlock, key))
     end
-    blocktype.encryptionType.buffer = removePadding(decryptedData)
+    blocktype.encryptionType.buffer = removePadding!(decryptedData)
 end
 
 function encrypt(blocktype::CipherBlocks.CBC)
-    blocksizeinbytes = blocktype.encryptionType.bits / 8
+    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.enckey
     else
         key = blocktype.encryptionType.key
@@ -86,10 +90,10 @@ function encrypt(blocktype::CipherBlocks.CBC)
 end
 
 function decrypt(blocktype::CipherBlocks.CBC)
-    blocksizeinbytes = blocktype.encryptionType.bits / 8
+    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.deckey
     else
         key = blocktype.encryptionType.key
@@ -104,14 +108,14 @@ function decrypt(blocktype::CipherBlocks.CBC)
         dataBlock = blocktype.encryptionType.decrypt(dataBlock, key) $ xorvec
         append!(decryptedData, dataBlock)
     end
-    blocktype.encryptionType.buffer = removePadding(decryptedData)
+    blocktype.encryptionType.buffer = removePadding!(decryptedData)
 end
 
 function encrypt(blocktype::CipherBlocks.CFB)
-    blocksizeinbytes = blocktype.encryptionType.bits / 8
+    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.enckey
     else
         key = blocktype.encryptionType.key
@@ -138,10 +142,10 @@ function encrypt(blocktype::CipherBlocks.CFB)
 end
 
 function decrypt(blocktype::CipherBlocks.CFB)
-    blocksizeinbytes = blocktype.encryptionType.bits / 8
+    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.deckey
     else
         key = blocktype.encryptionType.key
@@ -158,12 +162,11 @@ function decrypt(blocktype::CipherBlocks.CFB)
         dataBlock = dataBlock $ xorvec
         append!(decryptedData, dataBlock)
     end
-    blocktype.encryptionType.buffer = removePadding(decryptedData)
+    blocktype.encryptionType.buffer = removePadding!(decryptedData)
 end
 
-function removePadding(arr::Array{UInt8})
+function removePadding!(arr::Array{UInt8})
     startPadding = findlast(arr,1)
-    print(startPadding)
     if(startPadding >= length(arr) || startPadding == 0)
         return arr
     elseif findfirst(arr[startPadding+1:end]) == 0
@@ -173,5 +176,3 @@ function removePadding(arr::Array{UInt8})
 end
 
 end
-
-
