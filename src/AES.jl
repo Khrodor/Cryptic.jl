@@ -9,6 +9,9 @@ type AES256
     enckey::Array{UInt8}
     deckey::Array{UInt8}
     buffer::Array{UInt8}
+    bits::Int64
+    encrypt::Function
+    decrypt::Function
     
     AES256(key)=begin
         local encKey::Array{UInt8} = Array{UInt8}(32)
@@ -25,7 +28,7 @@ type AES256
         for i in 7:-1:1
             rcon = aesexpandenckey!(decKey, rcon)
         end
-        new(zeros(UInt8, 32), encKey, decKey, zeros(UInt8))
+        new(zeros(UInt8, 32), encKey, decKey, zeros(UInt8), 256, encrypt, decrypt)
     end
 end
 
