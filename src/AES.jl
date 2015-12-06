@@ -287,6 +287,7 @@ function encrypt(buf::Array{UInt8}, key::Array{UInt8})
     aesshiftrows!(buf)
     aesexpandenckey!(key, rcon)
     aesaddroundkey!(buf, key)
+    return buf
 end
 
 function decrypt(buf::Array{UInt8}, key::Array{UInt8})
@@ -310,6 +311,7 @@ function decrypt(buf::Array{UInt8}, key::Array{UInt8})
         i-=1
     end
     aesaddroundkey!(buf, key)
+    return buf
 end
         
 #tests
