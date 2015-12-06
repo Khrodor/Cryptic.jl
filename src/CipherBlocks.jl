@@ -7,7 +7,7 @@ type ECB
 end
 
 type CBC
-    encryptrionType
+    encryptionType
     initialVector::Array{UInt8}
 end
 
@@ -20,7 +20,7 @@ function encrypt(blocktype::CipherBlocks.ECB)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptrionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES)
         key = blocktype.encryptionType.enckey
     else
         key = blocktype.encryptionType.key
@@ -36,14 +36,14 @@ function encrypt(blocktype::CipherBlocks.ECB)
             append!(encryptedData, blocktype.encryptionType.encrypt(dataBlock, key))
         end
     end
-    blocktype.encryptrionType.buffer = encryptedData
+    blocktype.encryptionType.buffer = encryptedData
 end
 
 function decrypt(blocktype::CipherBlocks.ECB)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptrionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES)
         key = blocktype.encryptionType.deckey
     else
         key = blocktype.encryptionType.key
@@ -60,7 +60,7 @@ function encrypt(blocktype::CipherBlocks.CBC)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptrionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES)
         key = blocktype.encryptionType.enckey
     else
         key = blocktype.encryptionType.key
@@ -89,7 +89,7 @@ function decrypt(blocktype::CipherBlocks.CBC)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptrionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES)
         key = blocktype.encryptionType.deckey
     else
         key = blocktype.encryptionType.key
@@ -104,14 +104,14 @@ function decrypt(blocktype::CipherBlocks.CBC)
         dataBlock = blocktype.encryptionType.decrypt(dataBlock, key) $ xorvec
         append!(decryptedData, dataBlock)
     end
-    blocktype.encryptrionType.buffer = removePadding(decryptedData)
+    blocktype.encryptionType.buffer = removePadding(decryptedData)
 end
 
 function encrypt(blocktype::CipherBlocks.CFB)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptrionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES)
         key = blocktype.encryptionType.enckey
     else
         key = blocktype.encryptionType.key
@@ -123,7 +123,7 @@ function encrypt(blocktype::CipherBlocks.CFB)
     append!(encryptedData, dataBlock)
     for cnt in 2:blockCount
         if(cnt * blocksizeinbytes < length(databuffer))
-            xorvec = blocktype.encryptrionType.encrypt(dataBlock, key)
+            xorvec = blocktype.encryptionType.encrypt(dataBlock, key)
             dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : cnt * blocksizeinbytes]
             dataBlock = dataBlock $ xorvec
         else     
@@ -141,7 +141,7 @@ function decrypt(blocktype::CipherBlocks.CFB)
     blocksizeinbytes = blocktype.encryptionType.bits / 8
     databuffer = blocktype.encryptionType.buffer
     blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
-    if(typeof(blocktype.encryptrionType) == AES)
+    if(typeof(blocktype.encryptionType) == AES)
         key = blocktype.encryptionType.deckey
     else
         key = blocktype.encryptionType.key
@@ -161,7 +161,7 @@ function decrypt(blocktype::CipherBlocks.CFB)
     blocktype.encryptionType.buffer = removePadding(decryptedData)
 end
 
-function removePadding (arr::Array{UInt8})
+function removePadding(arr::Array{UInt8})
     startPadding = findlast(arr,1)
     print(startPadding)
     if(startPadding >= length(arr) || startPadding == 0)
