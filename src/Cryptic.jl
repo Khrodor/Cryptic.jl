@@ -4,7 +4,7 @@ module Cryptic
 
 include("SHA2.jl")
 include("AES.jl")
-
-export SHA2, AES
+include("CipherBlocks.jl")
+export SHA2, AES, CipherBlocks
 
 end # module
