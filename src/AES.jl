@@ -41,6 +41,7 @@ function setbuffer!(ctx::AES256, buf::ASCIIString; file::Bool=true)
     else
         ctx.buffer=Vector{UInt8}(buf)
     end
+    return ctx
 end
 
 f(x) = (((x)<<1) $ ((((x)>>7) & 1) * 0x1b))
