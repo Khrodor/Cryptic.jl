@@ -1,15 +1,20 @@
-
 module RandomGenerators
 
 importall PrimeTests
 export BlumBlumShub, nextnumber!, nextbit!, gordonalgorithm
 
-randombitsnumber(source::Number) = rand(1:(BigInt(1)<<length(bin(source))))
+function randombitsnumber(source::Number) 
+    local len::Number = length(bin(source))
+    if len > 3
+        return rand((BigInt(1)<<(len-2)):(BigInt(1)<<len))
+    end
+    return rand(1:BigInt(1)<<len)
+end
 
 function randomnumber(source::Number)
     local x::BigInt
     x = randombitsnumber(source)
-    source+x
+    return x
 end
 
 function randomprimenumber(source::Number)
@@ -68,7 +73,7 @@ end
 
 #strong prime number generator
 function gordonalgorithm(bits::Number=512)
-    local value::BigInt = BigInt(1)<<Int(bits/2)
+    local value::BigInt = BigInt(1)<<div(bits,2)
     local s::BigInt = randomprimenumber(value)
     local t::BigInt = randomprimenumber(value)
     
