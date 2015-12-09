@@ -1,6 +1,4 @@
 
-include("Cryptic.jl")
-
 module CipherBlocks
 
 using Cryptic.AES
@@ -14,11 +12,25 @@ end
 type CBC
     encryptionType
     initialVector::Array{UInt8}
+    CBC(encryptionType, initialVector) = begin
+        initVec = Array{UInt8}(initialVector)
+        if encryptionType.bits/8 > length(initialVector)
+           append!(initVec,zeros(UInt8,(Int(encryptionType.bits/8)-length(initialVector))))
+        end
+        new(encryptionType,initVec)
+    end
 end
 
 type CFB
     encryptionType
     initialVector::Array{UInt8}
+    CFB(encryptionType, initialVector) = begin
+        initVec = Array{UInt8}(initialVector)
+        if encryptionType.bits/8 > length(initialVector)
+           append!(initVec,zeros(UInt8,(Int(encryptionType.bits/8)-length(initialVector))))
+        end
+        new(encryptionType,initVec)
+    end
 end
 
 function encrypt(blocktype::CipherBlocks.ECB)
