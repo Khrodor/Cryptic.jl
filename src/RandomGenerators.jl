@@ -1,16 +1,18 @@
-
 module RandomGenerators
 
 importall PrimeTests
-export BlumBlumShub, nextnumber!, nextbit!, gordonalgorithm
 
-randombitsnumber(source::Number) = rand(1:(BigInt(1)<<length(bin(source))))
+export BlumBlumShub, RSA, BlumMacali, nextnumber!, nextbit!, gordonalgorithm
 
-function randomnumber(source::Number)
-    local x::BigInt
-    x = randombitsnumber(source)
-    source+x
+function randombitsnumber(source::Number) 
+    local len::Number = length(bin(source))
+    if len > 3
+        return rand((BigInt(1)<<(len-2)):(BigInt(1)<<len))
+    end
+    return rand(1:BigInt(1)<<len)
 end
+
+randomnumber(source::Number) = randombitsnumber(source)
 
 function randomprimenumber(source::Number)
     local x::BigInt
@@ -21,14 +23,10 @@ function randomprimenumber(source::Number)
     return x
 end
 
-function isxmody(number::Number, x::Number, y::Number)
-    return number%y == x
-end
+isxmody(number::Number, x::Number, y::Number) = number%y == x
 
 #checks if numbers are coprime
-function iscoprime(x::Number, y::Number)
-    return gcd(x,y) == 1
-end
+iscoprime(x::Number, y::Number) = gcd(x,y) == 1
 
 #blum blum shub generator
 type BlumBlumShub
@@ -51,24 +49,69 @@ type BlumBlumShub
         while !iscoprime(nx,nn)
             nx = rand(big(2:nn))
         end
-        nx = (nx^2) % nn
+        nx = powermod(nx, 2, nn)
         new(np,nq,nn,nx)
     end
 end
 
 #get next number from generator
-function nextnumber!(gen::BlumBlumShub)
-    gen.x = (gen.x^2) % gen.n
+nextnumber!(gen::BlumBlumShub) = gen.x = powermod(gen.x, 2, gen.n)
+#get next bit from generator
+nextbit!(gen::BlumBlumShub) = bin(nextnumber!(gen))[end] == '1' ? 1 : 0
+
+type BlumMicali
+    p::BigInt
+    g::BigInt
+    xi::BigInt
+    BlumMicali()=begin
+        local p::BigInt = rand((BigInt(1)<<512):(BigInt(1)<<2048))
+        while !millerRabin(p)
+            p = rand((BigInt(1)<<512):(BigInt(1)<<2048))
+        end
+        local g::BigInt = rand((BigInt(1)<<256):(BigInt(1)<<512))
+        while !millerRabin(g)
+            g = rand((BigInt(1)<<256):(BigInt(1)<<512))
+        end
+        local x0::BigInt = rand(7:p)
+        while !millerRabin(x0)
+            x0 = rand(7:p)
+        end
+        new(p, g, powermod(g,x0,p))
+    end
 end
 
-#get next bit from generator
-function nextbit!(gen::BlumBlumShub)
-    bin(nextnumber!(gen))[end]
+nextnumber!(gen::BlumMicali) = gen.xi = powermod(gen.g, gen.xi, gen.p)
+nextbit!(gen::BlumMicali) = nextnumber!(gen) < div(gen.p-1, 2) ? 1 : 0
+
+type RSA
+    e::BigInt
+    n::BigInt
+    xi::BigInt
+    RSA()=begin
+        local p::BigInt=rand((BigInt(1)<<512):(BigInt(1)<<2048))
+        while !millerRabin(p)
+            p=rand((BigInt(1)<<512):(BigInt(1)<<2048))
+        end
+        local q::BigInt=rand((BigInt(1)<<512):(BigInt(1)<<2048))
+        while !millerRabin(q)
+            q=rand((BigInt(1)<<512):(BigInt(1)<<2048))
+        end
+        local n::BigInt=p*q
+        local e::BigInt=rand((BigInt(1)<<256):n)
+        while !iscoprime(e, n)
+            e=rand((BigInt(1)<<256):n)
+        end
+        local x0=rand((BigInt(1)<<256):n)
+        new(e,n,powermod(x0,e,n))
+    end
 end
+
+nextnumber!(gen::RSA) = gen.xi = powermod(gen.xi, gen.e, gen.n)
+nextbit!(gen::RSA) = bin(nextnumber!(gen))[end] == '1' ? 1 : 0
 
 #strong prime number generator
 function gordonalgorithm(bits::Number=512)
-    local value::BigInt = BigInt(1)<<Int(bits/2)
+    local value::BigInt = BigInt(1)<<div(bits,2)
     local s::BigInt = randomprimenumber(value)
     local t::BigInt = randomprimenumber(value)
     
