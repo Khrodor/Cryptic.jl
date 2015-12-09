@@ -41,16 +41,23 @@ function generatekeys()
     return [[na,ea];[na,da]]
 end
 
-function encrypt(buf::ASCIIString, rsa::RSA1024)
-    blockCount = Int(ceil(length(buf) / rsa.k))
+function encrypt(buf::ASCIIString, rsa::RSA1024, file::Bool=false) 
+    if isfile(buf) && file
+        stream::IOStream = open(buf)
+        databuffer = readall(stream)
+        close(stream)
+    else
+        databuffer = buf
+    end
+    blockCount = Int(ceil(length(databuffer) / rsa.k))
     bufarray = Array{UInt8}(rsa.k)
     encryptedtext = Array{UInt8}(0)
     encryptedblocks = Array{BigInt}(0)
     for cnt1 in 1:blockCount
-        if cnt1*rsa.k < length(buf)
-            bufarray = Array{UInt8}(buf[ ((cnt1-1)*rsa.k)+1 : cnt1*rsa.k])
+        if cnt1*rsa.k < length(databuffer)
+            bufarray = Array{UInt8}(databuffer[ ((cnt1-1)*rsa.k)+1 : cnt1*rsa.k])
         else
-            bufarray = Array{UInt8}(buf[ ((cnt1-1)*rsa.k)+1 : end ])
+            bufarray = Array{UInt8}(databuffer[ ((cnt1-1)*rsa.k)+1 : end ])
             append!(bufarray,[UInt8('.');Array{UInt8}(rand(47:255,rsa.k-length(bufarray)-1))])
         end
         m=BigInt(0)
