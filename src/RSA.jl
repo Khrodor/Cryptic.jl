@@ -1,7 +1,7 @@
 module RSA
 export RSA1024, PublicRSA1024, PrivRSA1024, encrypt, decrypt, sigature, verifysign
 
-using RandomGenerators
+using Cryptic.RandomGenerators
 
 type RSA1024
     publicKey::Array{BigInt}
@@ -27,12 +27,18 @@ type PublicRSA1024
     publicKey::Array{BigInt}
     k::BigInt
     l::BigInt
+    PublicRSA1024(rsa::RSA1024)=begin
+        new(rsa.publicKey,rsa.k,rsa.l)
+    end
 end
 
 type PrivRSA1024
     privateKey::Array{BigInt}
     k::BigInt
     l::BigInt
+    PrivRSA1024(rsa::RSA1024)=begin
+        new(rsa.privateKey,rsa.k,rsa.l)
+    end
 end
 
 function generatekeys()

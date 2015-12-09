@@ -1,6 +1,6 @@
 module RandomGenerators
 
-importall PrimeTests
+using Cryptic.PrimeTests
 
 export BlumBlumShub, RSA, BlumMacali, nextnumber!, nextbit!, gordonalgorithm
 

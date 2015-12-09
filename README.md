@@ -105,11 +105,11 @@ Module RSA includes:
 Example:
 ```
   using Cryptic.RSA
-  test = RSA.RSA1024();
-  publictest = RSA.PublicRSA1024(test);
-  privtest = RSA.PrivRSA1024(test);
-  entest = RSA.encrypt("Example",publictest);
-  RSA.decrypt(entest,privtest)
+  test = Cryptic.RSA.RSA1024();
+  publictest = Cryptic.RSA.PublicRSA1024(test);
+  privtest = Cryptic.RSA.PrivRSA1024(test);
+  entest = Cryptic.RSA.encrypt("Example",publictest);
+  Cryptic.RSA.decrypt(entest,privtest)
 ```
 
 streaming: ( ks )
