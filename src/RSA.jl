@@ -1,12 +1,11 @@
 module RSA
-export RSA1024, encrypt, decrypt
+export RSA1024, PublicRSA1024, PrivRSA1024, encrypt, decrypt, sigature, verifysign
 
 using RandomGenerators
 
 type RSA1024
     publicKey::Array{BigInt}
     privateKey::Array{BigInt}
-    dicN::Int
     k::BigInt
     l::BigInt
          
@@ -20,8 +19,20 @@ type RSA1024
         privateKey = [keys[3],keys[4]]
         k =  Int(ceil(log(BigInt(255),publicKey[1]))) - 2
         l =  Int(ceil(log(BigInt(255),publicKey[1]))) + 2
-        new(publicKey, privateKey, 255, k, l)
+        new(publicKey, privateKey, k, l)
     end 
+end
+
+type PublicRSA1024
+    publicKey::Array{BigInt}
+    k::BigInt
+    l::BigInt
+end
+
+type PrivRSA1024
+    privateKey::Array{BigInt}
+    k::BigInt
+    l::BigInt
 end
 
 function generatekeys()
@@ -41,7 +52,7 @@ function generatekeys()
     return [[na,ea];[na,da]]
 end
 
-function encrypt(buf::ASCIIString, rsa::RSA1024, file::Bool=false) 
+function encrypt(buf::ASCIIString, publicRSA::PublicRSA1024, file::Bool=false) 
     if isfile(buf) && file
         stream::IOStream = open(buf)
         databuffer = readall(stream)
@@ -49,56 +60,75 @@ function encrypt(buf::ASCIIString, rsa::RSA1024, file::Bool=false)
     else
         databuffer = buf
     end
-    blockCount = Int(ceil(length(databuffer) / rsa.k))
-    bufarray = Array{UInt8}(rsa.k)
+    blockCount = Int(ceil(length(databuffer) / publicRSA.k))
+    bufarray = Array{UInt8}(publicRSA.k)
     encryptedtext = Array{UInt8}(0)
     encryptedblocks = Array{BigInt}(0)
     for cnt1 in 1:blockCount
-        if cnt1*rsa.k < length(databuffer)
-            bufarray = Array{UInt8}(databuffer[ ((cnt1-1)*rsa.k)+1 : cnt1*rsa.k])
+        if cnt1*publicRSA.k < length(databuffer)
+            bufarray = Array{UInt8}(databuffer[ ((cnt1-1)* publicRSA.k)+1 : cnt1*publicRSA.k])
         else
-            bufarray = Array{UInt8}(databuffer[ ((cnt1-1)*rsa.k)+1 : end ])
-            append!(bufarray,[UInt8('.');Array{UInt8}(rand(47:255,rsa.k-length(bufarray)-1))])
+            bufarray = Array{UInt8}(databuffer[ ((cnt1-1)* publicRSA.k)+1 : end ])
+            append!(bufarray,[UInt8('.');Array{UInt8}(rand(47:255, publicRSA.k-length(bufarray)-1))])
         end
-        m=BigInt(0)
-        for cnt2 in 1:length(bufarray)
-            m+=BigInt(bufarray[cnt2])*(255^(rsa.k-cnt2))
-        end
-        push!(encryptedblocks,powermod(m,rsa.publicKey[2],rsa.publicKey[1]))
+        m=calcm(bufarray,  publicRSA.k)
+        push!(encryptedblocks,powermod(m,publicRSA.publicKey[2],publicRSA.publicKey[1]))
     end
     for cnt3 in 1:length(encryptedblocks)
-        temp = encryptedblocks[cnt3]
-        for cnt4 in 1:rsa.l
-            letter = UInt8(floor(temp/(255^(rsa.l-cnt4))))
-            temp -= Int(letter)*(255^(rsa.l-cnt4))
-            push!(encryptedtext,letter)
-        end
+        letterset = encryptedblocks[cnt3]
+        append!(encryptedtext,getletters(letterset,publicRSA.l))
     end
     return encryptedtext
 end
 
-function decrypt(buf::Array{UInt8}, rsa::RSA1024)
-    blockCount = Int(ceil(length(buf) / rsa.l))
+function decrypt(buf::Array{UInt8}, privRSA::PrivRSA1024)
+    blockCount = Int(ceil(length(buf) / privRSA.l))
     decblocks = Array{BigInt}(0)
     for cnt1 in 1:blockCount
-        m = BigInt(0)
-        decblock = buf[(cnt1-1)*rsa.l+1 : cnt1*rsa.l]
-        for cnt2 in 1:length(decblock)
-            m+= BigInt(decblock[cnt2])*(255^(rsa.l-cnt2))
-        end
-        push!(decblocks,powermod(m,rsa.privateKey[2],rsa.privateKey[1]))
+        decblock = buf[(cnt1-1)*privRSA.l+1 : cnt1*privRSA.l]
+        m = calcm(decblock, privRSA.l)
+        push!(decblocks,powermod(m,privRSA.privateKey[2],privRSA.privateKey[1]))
     end
     decryptedtext = Array{UInt8}(0)
     for cnt3 in 1:length(decblocks)
-        temp = decblocks[cnt3]
-        for cnt4 in 1:rsa.k
-            letter = UInt8(floor(temp/(255^(rsa.k-cnt4))))
-            temp -= BigInt(letter)*(255^(rsa.k-cnt4))
-            push!(decryptedtext, letter)
-        end
+        letterset = decblocks[cnt3]
+        append!(decryptedtext,getletters(letterset,privRSA.k))
     end
     decryptedtext = removePadding!(decryptedtext)
     return ASCIIString(decryptedtext)
+end
+
+function getletters(num::BigInt, len::BigInt)
+    letters = Array{UInt8}(0)
+    temp = num
+    for cnt in 1:len
+        letter = UInt8(floor(temp/(255^(len-cnt))))
+        temp -= BigInt(letter)*(255^(len-cnt))
+        push!(letters, letter)
+    end
+    return letters
+end
+
+function signature(message::ASCIIString, privRSA::PrivRSA1024)
+    m = calcm(Array{UInt8}(message), BigInt(length(message)))
+    h = hash(m)
+    s = h % privRSA.privateKey[1]
+    return powermod(s,privRSA.privateKey[2],privRSA.privateKey[1])
+end
+
+function verifysign(message::ASCIIString, signa::BigInt, publicRSA::PublicRSA1024)
+    m = calcm(Array{UInt8}(message), BigInt(length(message)))
+    w = powermod(signa,publicRSA.publicKey[2],publicRSA.publicKey[1])
+    v = hash(m) % publicRSA.publicKey[1]
+    return v == w
+end
+
+function calcm(arr::Array{UInt8}, len::BigInt)
+    m = BigInt(0)
+    for cnt in 1:length(arr)
+        m+= BigInt(arr[cnt])*(255^(len-cnt))
+    end
+    return m
 end
 
 function removePadding!(arr::Array{UInt8})
