@@ -1,34 +1,39 @@
 # Cryptic
 
-block symmetric:
+# Symetric 
+
+#### AES
+
+Contains operations for encrypting data using AES cipher with blocks of 256 bits.
+
+    obj = AES256(key::ASCIIString)
+    
+In order to encrypt data you should pass that object to one of cipher block object.
+
 - aes (tb)
 - twofish (tr)
 - serpent (tr)
 
-block cipher modes:
-- ecb (rz)
-- cbc (rz)
-- cfb (rz)
-Module CipherBlocks includes:
+# Module CipherBlocks includes:
 
 3 types:
 
-  ECB:
+#### ECB:
 
     constructor ECB(encryptrionType::Any)
     takes selected block encryption type
-  CBC:
+#### CBC:
 
     constructor CBC(encryptrionType::Any, initialVetor::Array{UInt8})
     takes selected encryption block type and initial vector for encoding/decoding
-  CFB:
+#### CFB:
 
     constructor CFB(encryptrionType::Any, initialVetor::Array{UInt8})
     takes selected encryption block type and initial vector for encoding/decoding
 
 2 functions
 
-  encrypt(blocktype
+  encrypt(blocktype)
 
     Encrypts data given in encryption type object with block of selected type.
     Overwrites data buffer inside encryption type object
@@ -39,14 +44,11 @@ Module CipherBlocks includes:
     Overwrites data buffer inside encryption type object
 
 
-asymetric:
-- rsa (rz) + enc/dec/sign
-
-Module RSA includes:
+# Module RSA includes:
 
 3 types:
 
-  RSA1024:
+#### RSA1024:
 
     constuctor RSA1024()
     takes no arguments
@@ -58,24 +60,22 @@ Module RSA includes:
       k::BigInt holds length of plaintext block
       l::BigInt holds length of ciphertext block
 
-  PublicRSA1024:
+#### PublicRSA1024:
 
     constructor PublicRSA1024(rsa::RSA1024)
     takes as argument RSA1024 object to initalize its fields
 
     fields:
-
       publicKey::Array{BigInt} holds generated in rsa object public key values
       k::BigInt holds length of plaintext block
       l::BigInt holds length of ciphertext block
 
-  PrivRSA1024:
+#### PrivRSA1024:
 
     constructor PrivRSA1024(rsa::RSA1024)
     takes as argument RSA1024 object to initalize its fields
 
     fields:
-
       privateKey::Array{BigInt} holds generated in rsa object private key values
       k::BigInt holds length of plaintext block
       l::BigInt holds length of ciphertext block
@@ -119,10 +119,30 @@ streaming: ( ks )
 - sosemanuk (ks)
 - estream (ks)
 
-hash: (tb)
+# Hash functions
 -  md5 (tr)
--  sha (tb)
--  bcrypt? (tb)
+
+#### SHA2
+
+Basic SHA2 hashing function that operates on blocks of 256 bits.
+
+    obj = SHA256(string::ASCIIString; file::Bool=true)
+    compute!(obj)
+    
+SHA256 takes as parameter string, which next will be computed. Normal text that will be computed can be passed, as well as path to file. If file exist, then hash function from this file will be computed.
+
+####  bCrypt
+
+Strong hashing function.
+
+    bcrypt = bCrypt()
+    salt::ASCIIString = gensalt(obj::bCrypt, rounds::Int)
+    hashpw(obj::bCrypt, stringtohash::ASCIIString, salt::ASCIIString)
+
+In order to compute hash you need to provide string which will be computed, and salt string, that will randomize that hash.
+
+To generate random salt you can use **gensalt** function and provide number of rounds. That number should be greater than 4 and less than 30. 
+
 -  whirpool (tr)
 
 protocols:
@@ -136,26 +156,37 @@ primality tests: (ks)
 - bpsw (ks)
 - aks (ks)
 
-# Random Generators
+# Module RandomGenerators
+
 Every generator contains two function:
 - **nextbit!(gen::Any)** - generates next random bit
 - **nextnumber!(gen::Any)** - generates next number
+
 #### RSA
+
     gen=RSA()
     nextbit!(gen)
+    
 #### BlumBlumShub
+
 Safety of this generator is based on difficult level to calculate square root modulus composite number.
 
     gen=BlumBlumShub(bits::Number)
     nextbit!(gen)
+    
 Bits parameter is the minimum bits size of defined generator.
+
 #### BlumMicali
+
 Safety of this generator is based on discrete logarithm problem.
 
     gen=BlumMicali()
     nextbit!(gen)
-# Random prime number
+    
+## Random prime number
+
 #### Gordon algorithm
+
 Algorithm allows to generate strong prime number **p** that meets specific requirements:
 - **p - 1** have big prime factor, denoted by **r**
 - **p + 1** have big prime factor,
@@ -163,5 +194,6 @@ Algorithm allows to generate strong prime number **p** that meets specific requi
 
 
     gordonalgorithm(bits::Number=512)
+    
     
 Bits parameter is the minimum bits size of generated strong prime number.
