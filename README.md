@@ -136,4 +136,32 @@ primality tests: (ks)
 - bpsw (ks)
 - aks (ks)
 
-prime number generators (tb)
+# Random Generators
+Every generator contains two function:
+- **nextbit!(gen::Any)** - generates next random bit
+- **nextnumber!(gen::Any)** - generates next number
+#### RSA
+    gen=RSA()
+    nextbit!(gen)
+#### BlumBlumShub
+Safety of this generator is based on difficult level to calculate square root modulus composite number.
+
+    gen=BlumBlumShub(bits::Number)
+    nextbit!(gen)
+Bits parameter is the minimum bits size of defined generator.
+#### BlumMicali
+Safety of this generator is based on discrete logarithm problem.
+
+    gen=BlumMicali()
+    nextbit!(gen)
+# Random prime number
+#### Gordon algorithm
+Algorithm allows to generate strong prime number **p** that meets specific requirements:
+- **p - 1** have big prime factor, denoted by **r**
+- **p + 1** have big prime factor,
+- **r - 1** have big prime factor.
+
+
+    gordonalgorithm(bits::Number=512)
+    
+Bits parameter is the minimum bits size of generated strong prime number.

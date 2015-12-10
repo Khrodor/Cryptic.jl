@@ -2,7 +2,7 @@ module RandomGenerators
 
 using Cryptic.PrimeTests
 
-export BlumBlumShub, RSA, BlumMacali, nextnumber!, nextbit!, gordonalgorithm
+export BlumBlumShub, RSA, BlumMicali, nextnumber!, nextbit!, gordonalgorithm
 
 function randombitsnumber(source::Number) 
     local len::Number = length(bin(source))
