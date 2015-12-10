@@ -8,6 +8,7 @@ include("PrimeTests.jl")
 include("RandomGenerators.jl")
 include("CipherBlocks.jl")
 include("RSA.jl")
-export SHA2, AES, PrimeTests, RandomGenerators, CipherBlocks, RSA
+include("BCrypt.jl")
+export SHA2, AES, PrimeTests, RandomGenerators, CipherBlocks, RSA, BCrypt
 
 end # module
