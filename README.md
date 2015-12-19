@@ -1,13 +1,13 @@
 # Cryptic
 
-# Symetric 
+# Symetric
 
 #### AES
 
 Contains operations for encrypting data using AES cipher with blocks of 256 bits.
 
     obj = AES256(key::ASCIIString)
-    
+
 In order to encrypt data you should pass that object to one of cipher block object.
 
 - aes (tb)
@@ -30,7 +30,13 @@ In order to encrypt data you should pass that object to one of cipher block obje
 
     constructor CFB(encryptrionType::Any, initialVetor::Array{UInt8})
     takes selected encryption block type and initial vector for encoding/decoding
-
+#### Note:
+    encryptionType object should contain fields:
+     bits - Block size in bits
+     key - Key for encryption
+     encrypt - Encryption function
+     decrypt - Decryption function
+     buffer - Buffer with whole initial plain text
 2 functions
 
   encrypt(blocktype)
@@ -82,22 +88,22 @@ In order to encrypt data you should pass that object to one of cipher block obje
 
 4 functions:
 
-  encrypt(buf::ASCIIString, publicRSA::PublicRSA1024, file::Bool=false)
+  encrypt(buf::Union{ASCIIString, IOStream, Array{UInt8}, publicRSA::PublicRSA1024)
 
-    Encrypts data given as file or ASCIIString type string. As a key it takes values from PublicRSA1024 type object.
+    Encrypts data where as a key it takes values from PublicRSA1024 type object.
     returns encrypteddata::Array{UInt8}
 
   decrypt(buf::Array{UInt8}, privRSA::PrivRSA1024)
 
     Dectypts data given as result of encrypt function. As a key it takes values from PrivRSA1024 type object.
-    returns decrypteddata::ASCIIString
+    returns decrypteddata::Array{UInt8}
 
-  signature(message::ASCIIString, privRSA::PrivRSA1024)
+  signature(message::Union{Array{UInt8},ASCIIString}, privRSA::PrivRSA1024)
 
     Creates signature for given message with keys provided in PrivRSA1024 type object.
     returns signature::BigInt
 
-  verifysign(message::ASCIIString, signa::BigInt, publicRSA::PublicRSA1024)
+  verifysign(message::Union{Array{UInt8},ASCIIString}, signa::BigInt, publicRSA::PublicRSA1024)
 
     Verifies provided signature to message with keys given in PublicRSA1024 type object.
     returns result::Bool
@@ -128,7 +134,7 @@ Basic SHA2 hashing function that operates on blocks of 256 bits.
 
     obj = SHA256(string::ASCIIString; file::Bool=true)
     compute!(obj)
-    
+
 SHA256 takes as parameter string, which next will be computed. Normal text that will be computed can be passed, as well as path to file. If file exist, then hash function from this file will be computed.
 
 ####  bCrypt
@@ -141,7 +147,7 @@ Strong hashing function.
 
 In order to compute hash you need to provide string which will be computed, and salt string, that will randomize that hash.
 
-To generate random salt you can use **gensalt** function and provide number of rounds. That number should be greater than 4 and less than 30. 
+To generate random salt you can use **gensalt** function and provide number of rounds. That number should be greater than 4 and less than 30.
 
 -  whirpool (tr)
 
@@ -166,14 +172,14 @@ Every generator contains two function:
 
     gen=RSA()
     nextbit!(gen)
-    
+
 #### BlumBlumShub
 
 Safety of this generator is based on difficult level to calculate square root modulus composite number.
 
     gen=BlumBlumShub(bits::Number)
     nextbit!(gen)
-    
+
 Bits parameter is the minimum bits size of defined generator.
 
 #### BlumMicali
@@ -182,7 +188,7 @@ Safety of this generator is based on discrete logarithm problem.
 
     gen=BlumMicali()
     nextbit!(gen)
-    
+
 ## Random prime number
 
 #### Gordon algorithm
@@ -194,6 +200,6 @@ Algorithm allows to generate strong prime number **p** that meets specific requi
 
 
     gordonalgorithm(bits::Number=512)
-    
-    
+
+
 Bits parameter is the minimum bits size of generated strong prime number.

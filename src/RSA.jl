@@ -1,5 +1,5 @@
 module RSA
-export RSA1024, PublicRSA1024, PrivRSA1024, encrypt, decrypt, sigature, verifysign
+export RSA1024, PublicRSA1024, PrivRSA1024, encrypt, decrypt, signature, verifysign
 
 using Cryptic.RandomGenerators
 
@@ -58,15 +58,15 @@ function generatekeys()
     return [[na,ea];[na,da]]
 end
 
-function encrypt(buf::ASCIIString, publicRSA::PublicRSA1024, file::Bool=false) 
-    if isfile(buf) && file
-        stream::IOStream = open(buf)
-        databuffer = readall(stream)
-        close(stream)
+function encrypt(buf::Union{ASCIIString, IOStream, Array{UInt8}}, publicRSA::PublicRSA1024) 
+    databuffer = Array{UInt8}()
+    if typeof(buf)<:IOStream
+        databuffer = readall(buf)
+        close(buf)
     else
         databuffer = buf
     end
-    blockCount = Int(ceil(length(databuffer) / publicRSA.k))
+    blockCount = div(length(databuffer), publicRSA.k) + 1
     bufarray = Array{UInt8}(publicRSA.k)
     encryptedtext = Array{UInt8}(0)
     encryptedblocks = Array{BigInt}(0)
@@ -75,7 +75,7 @@ function encrypt(buf::ASCIIString, publicRSA::PublicRSA1024, file::Bool=false)
             bufarray = Array{UInt8}(databuffer[ ((cnt1-1)* publicRSA.k)+1 : cnt1*publicRSA.k])
         else
             bufarray = Array{UInt8}(databuffer[ ((cnt1-1)* publicRSA.k)+1 : end ])
-            append!(bufarray,[UInt8('.');Array{UInt8}(rand(47:255, publicRSA.k-length(bufarray)-1))])
+            append!(bufarray,[length(databuffer);Array{UInt8}(rand(47:255, publicRSA.k-length(bufarray)-2));length(databuffer)])
         end
         m=calcm(bufarray,  publicRSA.k)
         push!(encryptedblocks,powermod(m,publicRSA.publicKey[2],publicRSA.publicKey[1]))
@@ -88,7 +88,7 @@ function encrypt(buf::ASCIIString, publicRSA::PublicRSA1024, file::Bool=false)
 end
 
 function decrypt(buf::Array{UInt8}, privRSA::PrivRSA1024)
-    blockCount = Int(ceil(length(buf) / privRSA.l))
+    blockCount = div(length(buf), privRSA.l)
     decblocks = Array{BigInt}(0)
     for cnt1 in 1:blockCount
         decblock = buf[(cnt1-1)*privRSA.l+1 : cnt1*privRSA.l]
@@ -100,29 +100,29 @@ function decrypt(buf::Array{UInt8}, privRSA::PrivRSA1024)
         letterset = decblocks[cnt3]
         append!(decryptedtext,getletters(letterset,privRSA.k))
     end
-    decryptedtext = removePadding!(decryptedtext)
-    return ASCIIString(decryptedtext)
+    decryptedtext = removepadding!(decryptedtext)
+    return decryptedtext
 end
 
 function getletters(num::BigInt, len::BigInt)
     letters = Array{UInt8}(0)
     temp = num
     for cnt in 1:len
-        letter = UInt8(floor(temp/(255^(len-cnt))))
+        letter = UInt8(div(temp,(255^(len-cnt))))
         temp -= BigInt(letter)*(255^(len-cnt))
         push!(letters, letter)
     end
     return letters
 end
 
-function signature(message::ASCIIString, privRSA::PrivRSA1024)
+function signature(message::Union{Array{UInt8},ASCIIString}, privRSA::PrivRSA1024)
     m = calcm(Array{UInt8}(message), BigInt(length(message)))
     h = hash(m)
     s = h % privRSA.privateKey[1]
     return powermod(s,privRSA.privateKey[2],privRSA.privateKey[1])
 end
 
-function verifysign(message::ASCIIString, signa::BigInt, publicRSA::PublicRSA1024)
+function verifysign(message::Union{Array{UInt8},ASCIIString}, signa::BigInt, publicRSA::PublicRSA1024)
     m = calcm(Array{UInt8}(message), BigInt(length(message)))
     w = powermod(signa,publicRSA.publicKey[2],publicRSA.publicKey[1])
     v = hash(m) % publicRSA.publicKey[1]
@@ -137,11 +137,12 @@ function calcm(arr::Array{UInt8}, len::BigInt)
     return m
 end
 
-function removePadding!(arr::Array{UInt8})
-    startPadding = findlast(arr,UInt8('.'))
+function removepadding!(arr::Array{UInt8})
+    bufferlength = arr[end]
+    startPadding = findprev(arr,bufferlength,length(arr)-1)
     if(startPadding >= length(arr) || startPadding == 0)
         return arr
-    elseif findfirst(arr[startPadding+1:end],UInt8('.')) == 0
+    elseif findfirst(arr[startPadding+1:end-1],bufferlength) == 0 && (bufferlength == arr[startPadding])
         return arr[1:startPadding-1]
     end
     return arr

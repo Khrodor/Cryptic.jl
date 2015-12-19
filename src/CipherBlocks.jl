@@ -5,6 +5,8 @@ using Cryptic.AES
 
 export ECB, CBC, CFB, encrypt, decrypt
 
+abstract AbstractBlockEncryption
+
 type ECB 
     encryptionType
 end
@@ -15,7 +17,7 @@ type CBC
     CBC(encryptionType, initialVector) = begin
         initVec = Array{UInt8}(initialVector)
         if encryptionType.bits/8 > length(initialVector)
-           append!(initVec,zeros(UInt8,(Int(encryptionType.bits/8)-length(initialVector))))
+           append!(initVec,zeros(UInt8,(div(encryptionType.bits,8)-length(initialVector))))
         end
         new(encryptionType,initVec)
     end
@@ -27,16 +29,16 @@ type CFB
     CFB(encryptionType, initialVector) = begin
         initVec = Array{UInt8}(initialVector)
         if encryptionType.bits/8 > length(initialVector)
-           append!(initVec,zeros(UInt8,(Int(encryptionType.bits/8)-length(initialVector))))
+            append!(initVec,zeros(UInt8,(div(encryptionType.bits,8)-length(initialVector))))
         end
         new(encryptionType,initVec)
     end
 end
 
 function encrypt(blocktype::CipherBlocks.ECB)
-    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
+    blocksizeinbytes = div(blocktype.encryptionType.bits, 8)
     databuffer = blocktype.encryptionType.buffer
-    blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
+    blockCount = div(length(databuffer), blocksizeinbytes) + 1
     if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.enckey
     else
@@ -48,7 +50,7 @@ function encrypt(blocktype::CipherBlocks.ECB)
             dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : cnt * blocksizeinbytes]
          else
             dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : end]
-            append!(dataBlock, [1;zeros(UInt8, (blocksizeinbytes-length(dataBlock)-1))])
+            append!(dataBlock, [length(databuffer);zeros(UInt8, (blocksizeinbytes-length(dataBlock)-2));length(databuffer)])
         end
         append!(encryptedData, blocktype.encryptionType.encrypt(dataBlock, key))
     end
@@ -56,9 +58,9 @@ function encrypt(blocktype::CipherBlocks.ECB)
 end
 
 function decrypt(blocktype::CipherBlocks.ECB)
-    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
+    blocksizeinbytes = div(blocktype.encryptionType.bits, 8)
     databuffer = blocktype.encryptionType.buffer
-    blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
+    blockCount = div(length(databuffer), blocksizeinbytes)
     if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.deckey
     else
@@ -69,13 +71,13 @@ function decrypt(blocktype::CipherBlocks.ECB)
         dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : cnt * blocksizeinbytes]
         append!(decryptedData, blocktype.encryptionType.decrypt(dataBlock, key))
     end
-    blocktype.encryptionType.buffer = removePadding!(decryptedData)
+    blocktype.encryptionType.buffer = removepadding!(decryptedData)
 end
 
 function encrypt(blocktype::CipherBlocks.CBC)
-    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
+    blocksizeinbytes = div(blocktype.encryptionType.bits, 8)
     databuffer = blocktype.encryptionType.buffer
-    blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
+    blockCount = div(length(databuffer), blocksizeinbytes) + 1
     if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.enckey
     else
@@ -92,7 +94,7 @@ function encrypt(blocktype::CipherBlocks.CBC)
             dataBlock $= encryptedBlock
         else            
             dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : end]
-            append!(dataBlock, [1;zeros(UInt8, (blocksizeinbytes-length(dataBlock)-1))])
+            append!(dataBlock, [length(databuffer);zeros(UInt8, (blocksizeinbytes-length(dataBlock)-2));length(databuffer)])
             dataBlock $= encryptedBlock
         end
         encryptedBlock = blocktype.encryptionType.encrypt(dataBlock, key)
@@ -102,9 +104,9 @@ function encrypt(blocktype::CipherBlocks.CBC)
 end
 
 function decrypt(blocktype::CipherBlocks.CBC)
-    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
+    blocksizeinbytes = div(blocktype.encryptionType.bits, 8)
     databuffer = blocktype.encryptionType.buffer
-    blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
+    blockCount = div(length(databuffer), blocksizeinbytes)
     if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.deckey
     else
@@ -124,9 +126,9 @@ function decrypt(blocktype::CipherBlocks.CBC)
 end
 
 function encrypt(blocktype::CipherBlocks.CFB)
-    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
+    blocksizeinbytes = div(blocktype.encryptionType.bits, 8)
     databuffer = blocktype.encryptionType.buffer
-    blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
+    blockCount = div(length(databuffer), blocksizeinbytes) + 1
     if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.enckey
     else
@@ -145,7 +147,7 @@ function encrypt(blocktype::CipherBlocks.CFB)
         else     
             xorvec = blocktype.encryptFunction(dataBlock, key)       
             dataBlock = databuffer[((cnt-1) * blocksizeinbytes) + 1 : end]
-            append!(dataBlock, [1;zeros(UInt8, (blocksizeinbytes-length(dataBlock)-1))])
+            append!(dataBlock, [length(databuffer);zeros(UInt8, (blocksizeinbytes-length(dataBlock)-2));length(databuffer)])
             dataBlock = dataBlock $ xorvec
         end
         append!(encryptedData, dataBlock)
@@ -154,9 +156,9 @@ function encrypt(blocktype::CipherBlocks.CFB)
 end
 
 function decrypt(blocktype::CipherBlocks.CFB)
-    blocksizeinbytes = Int(blocktype.encryptionType.bits / 8)
+    blocksizeinbytes = div(blocktype.encryptionType.bits, 8)
     databuffer = blocktype.encryptionType.buffer
-    blockCount = Int(ceil(length(databuffer) / blocksizeinbytes))
+    blockCount = div(length(databuffer), blocksizeinbytes)
     if(typeof(blocktype.encryptionType) == AES256)
         key = blocktype.encryptionType.deckey
     else
@@ -177,11 +179,12 @@ function decrypt(blocktype::CipherBlocks.CFB)
     blocktype.encryptionType.buffer = removePadding!(decryptedData)
 end
 
-function removePadding!(arr::Array{UInt8})
-    startPadding = findlast(arr,1)
+function removepadding!(arr::Array{UInt8})
+    bufferlength = arr[end]
+    startPadding = findprev(arr,bufferlength,length(arr)-1)
     if(startPadding >= length(arr) || startPadding == 0)
         return arr
-    elseif findfirst(arr[startPadding+1:end]) == 0
+        elseif findfirst(arr[startPadding+1:end-1]) == 0
         return arr[1:startPadding-1]
     end
     return arr
