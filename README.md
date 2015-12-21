@@ -129,6 +129,7 @@ Example:
 #### Grain
 
 Generatin Grain bit stream:
+
 	key = BitArray( round( rand(80) ) )
 	iv = BitArray( round( rand(64) ) )
 	#s, b - internal registers
@@ -141,6 +142,7 @@ Generatin Grain bit stream:
 #### Trivium
 
 Generating Trivium bit stream:
+
 	key = BitArray( round( rand(80) ) )
 	iv = BitArray( round( rand(80) ) )
 	#state - internal register
@@ -152,6 +154,7 @@ Generating Trivium bit stream:
 #### Mickey
 
 Generating Mickey bit stream:
+
 	key = BitArray( round( rand(80) ) )
 	iv = BitArray( round( rand(80) ) )
 	#s, b - internal registers
