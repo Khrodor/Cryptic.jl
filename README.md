@@ -126,7 +126,7 @@ Example:
 ```
 #Stream ciphers
 
-## Grain
+#### Grain
 
 Generatin Grain bit stream:
 	key = BitArray( round( rand(80) ) )
@@ -138,7 +138,7 @@ Generatin Grain bit stream:
 	o
 
 
-## Trivium
+#### Trivium
 
 Generating Trivium bit stream:
 	key = BitArray( round( rand(80) ) )
@@ -149,7 +149,7 @@ Generating Trivium bit stream:
 	o, state = trivium_stream( 100, state )
 	o
 
-## Mickey
+#### Mickey
 
 Generating Mickey bit stream:
 	key = BitArray( round( rand(80) ) )
@@ -160,7 +160,7 @@ Generating Mickey bit stream:
 	o, r, s = mickey_stream( 100, r, s )
 	o
 
-## Salsa20
+#### Salsa20
 
 Generating encrypted message with given key and iv.
 
