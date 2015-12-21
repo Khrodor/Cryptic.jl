@@ -258,7 +258,7 @@ function tests()
     assert(res2 == "28cac1a9a8d521b6aa3b454a19d592e5a113d08a2fbcfefb8a7b977fea140cdd")
     assert(res3 == "3c00539acd235bde9eb4117f1fa04a6c274ee282a54cdbce88a3854022ebcc79")
 end
-tests()
+#tests()
 
 end
 

@@ -431,7 +431,7 @@ function tests()
 end
 #endtests
 
-tests()
+#tests()
 
 end
 

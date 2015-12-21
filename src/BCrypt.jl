@@ -638,6 +638,6 @@ function tests()
     bcrypt=bCrypt()
     assert(hashpw(bcrypt, "test", "\$2a\$08\$b0MHMsT3ErLoTRjpjzsCie")=="\$2a\$08\$b0MHMsT3ErLoTRjpjzsCieMeqya5EjRiIKxq5fjY.S1XyjVcjtbUHy")
 end
-tests()
+#tests()
 #end
 end
