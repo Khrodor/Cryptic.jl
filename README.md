@@ -10,9 +10,17 @@ Contains operations for encrypting data using AES cipher with blocks of 256 bits
 
 In order to encrypt data you should pass that object to one of cipher block object.
 
-- aes (tb)
-- twofish (tr)
-- serpent (tr)
+#### Serpent
+
+Contains operations for encrypting data using Serpent cipher with blocks of 128 bits.
+
+    obj = Serpent128(key::ASCIIString)
+
+or
+
+	obj = Serpent128(key::Array{UInt8})
+
+In order to encrypt data you should pass that object to one of cipher block object. Actually this encrypt algorithm is quite slow, its need some optimization.
 
 # Module CipherBlocks includes:
 
@@ -126,7 +134,15 @@ streaming: ( ks )
 - estream (ks)
 
 # Hash functions
--  md5 (tr)
+#### md5
+
+Standart md5 function, to use one of functions:
+
+	md5(msg::ASCIIString)
+	md5(msg::Array{UInt8})
+	md5(file::IO)
+
+md5 is not safe actually.
 
 #### SHA2
 
@@ -149,13 +165,17 @@ In order to compute hash you need to provide string which will be computed, and 
 
 To generate random salt you can use **gensalt** function and provide number of rounds. That number should be greater than 4 and less than 30.
 
--  whirpool (tr)
+#### Whirpool
 
-protocols:
--  dh (tr)
+Strong hashing 512 bits function, for use simply call one of functions:
 
-historic:
--  enigma (tr)
+	whirpool(msg::ASCIIString)
+	whirpool(msg::Array{UInt8})
+	whirpool(file::IO)
+
+
+# Historic
+
 
 primality tests: (ks)
 - miller-rabin (ks)

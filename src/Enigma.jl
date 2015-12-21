@@ -4,21 +4,10 @@ module Enigma
 export enigma
 
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    salphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     rotors = ["EKMFLGDQVZNTOWYHXUSPAIBRCJ" "AJDKSIRUXBLHWTMCQGZNPYFVOE" "BDFHJLCPRTXVZNYEIWGAKMUSQO" ]
     reflector = "YRUHQSLDPXNGOKMIEBFZCWVJAT"
 
     beg = 1
-
-
-    function tobyte(a)
-        ret = Array(UInt8, 0)
-        for i in 1:length(a)
-            push!(ret, li(a[i]) )
-        end
-        return ret
-    end
-
 
     function mod26(a)
         return ((a%26 + 26 )% 26)
@@ -104,13 +93,17 @@ export enigma
 
 
     function enigma(letters, key, msg)
+		letters = uppercase(letters)
+		key = uppercase(key)
+		msg = uppercase(msg)
+		if(length(key) < 3)
+			key = "ABC"
+		end
         swapedplainmsg = swap(letters, msg)
         encryptedmsg = crypt(key, swapedplainmsg)
         swapedencrypted = swap(letters, encryptedmsg)
         return swapedencrypted
     end
-
 end
-
 
 
