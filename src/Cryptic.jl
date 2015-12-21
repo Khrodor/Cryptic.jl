@@ -23,6 +23,9 @@ export grain_stream, grain_init
 using Trivium
 export trivium_stream, trivium_init
 
+using Salsa20
+export salsa20
+
 export SHA2, AES, PrimeTests, RandomGenerators, CipherBlocks, RSA, BCrypt, enigma, whirpool, md5, Serpent128
 
 end # module
