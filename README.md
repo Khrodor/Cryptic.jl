@@ -124,12 +124,56 @@ Example:
   entest = Cryptic.RSA.encrypt("Example",publictest);
   Cryptic.RSA.decrypt(entest,privtest)
 ```
+#Stream ciphers
 
-streaming: ( ks )
-- a5/* (ks)
-- salsa (ks)
-- sosemanuk (ks)
-- estream (ks)
+## Grain
+
+Generatin Grain bit stream:
+	key = BitArray( round( rand(80) ) )
+	iv = BitArray( round( rand(64) ) )
+	#s, b - internal registers
+	s, b = grain_init( key, iv )
+	#o - output
+	o, s, b = grain_stream( 100, s, b )
+	o
+
+
+## Trivium
+
+Generating Trivium bit stream:
+	key = BitArray( round( rand(80) ) )
+	iv = BitArray( round( rand(80) ) )
+	#state - internal register
+	state = trivium_init( key, iv )
+	#o - output
+	o, state = trivium_stream( 100, state )
+	o
+
+## Mickey
+
+Generating Mickey bit stream:
+	key = BitArray( round( rand(80) ) )
+	iv = BitArray( round( rand(80) ) )
+	#s, b - internal registers
+	r, s = mickey_init( key, iv )
+	#o - output
+	o, r, s = mickey_stream( 100, r, s )
+	o
+
+## Salsa20
+
+Generating encrypted message with given key and iv.
+
+	key = convert( Array{UInt8}, rand( 0:255, 16 ) )
+	iv = convert( Array{UInt8}, rand( 0:255, 16 ) )
+	msg = convert( Array{UInt8}, rand( 0:255, 1000 ) )
+	salsa20( key, iv, msg)
+
+	key1 = convert( Array{UInt8}, rand( 0:255, 16 ) )
+	key2 = convert( Array{UInt8}, rand( 0:255, 16 ) )
+	iv = convert( Array{UInt8}, rand( 0:255, 16 ) )
+	msg = convert( Array{UInt8}, rand( 0:255, 1000 ) )
+	salsa20( key1, key2, iv, msg)
 
 # Hash functions
 #### md5
@@ -236,3 +280,5 @@ Algorithm allows to generate strong prime number **p** that meets specific requi
 
 
 Bits parameter is the minimum bits size of generated strong prime number.
+
+
