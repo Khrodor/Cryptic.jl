@@ -15,12 +15,11 @@ In order to encrypt data you should pass that object to one of cipher block obje
 Contains operations for encrypting data using Serpent cipher with blocks of 128 bits.
 
     obj = Serpent128(key::ASCIIString)
-
-or
+or 
 
 	obj = Serpent128(key::Array{UInt8})
 
-In order to encrypt data you should pass that object to one of cipher block object. Actually this encrypt algorithm is quite slow, its need some optimization.
+In order to encrypt data you should pass that object to one of cipher block object. Actually this encrypt algorithm is quite slow, and need some optimization.
 
 # Module CipherBlocks includes:
 
@@ -127,7 +126,6 @@ Example:
 ```
 
 streaming: ( ks )
-- rc4 (tr)
 - a5/* (ks)
 - salsa (ks)
 - sosemanuk (ks)
@@ -136,7 +134,7 @@ streaming: ( ks )
 # Hash functions
 #### md5
 
-Standart md5 function, to use one of functions:
+Standart md5 function, to use call one of functions:
 
 	md5(msg::ASCIIString)
 	md5(msg::Array{UInt8})
@@ -176,8 +174,23 @@ Strong hashing 512 bits function, for use simply call one of functions:
 
 # Historic
 
+#### Enigma
 
-primality tests: (ks)
+Simply implementation of 3 rotors enigma with reflector. To use call function:
+
+	enigma(letters::ASCIIString, key:ASCIIString, msg:ASCIIString)
+
+Where letters are in form:
+
+	"AB CD"
+	
+which means, that we replace A->B, B->A, and C->D, D->C
+
+key is ASCIIString of length 3, if no key is specified or key is less than 3 characters, default key will be established ("ABC")
+
+spaces are not encrypted.
+
+# primality tests: (ks)
 - miller-rabin (ks)
 - bpsw (ks)
 - aks (ks)
