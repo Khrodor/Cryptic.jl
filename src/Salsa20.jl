@@ -121,6 +121,9 @@ end
 
 function salsa20( k::Array{UInt8}, v::Array{UInt8}, m::Array{UInt8} )
 
+    assert( length(k) == 16  )
+    assert( length(v) == 16  )
+
     l = Array{UInt8}( length(m) )
     iArray = Array{UInt8}(16) #iArray is 8 bytes + 8 to append
     
@@ -153,6 +156,10 @@ function salsa20( k::Array{UInt8}, v::Array{UInt8}, m::Array{UInt8} )
 end
 
 function salsa20( k0::Array{UInt8}, k1::Array{UInt8}, v::Array{UInt8}, m::Array{UInt8} )
+
+    assert( length(k0) == 16  )
+    assert( length(k1) == 16  )
+    assert( length(v) == 16  )
 
     l = Array{UInt8}( length(m) )
     iArray = Array{UInt8}(16) #iArray is 8 bytes + 8 to append

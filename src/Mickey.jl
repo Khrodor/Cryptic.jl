@@ -1,5 +1,5 @@
 module Mickey
-export mickey_stream, mickeyInit
+export mickey_stream, mickey_init
 
 rtaps = [97,96,95,94,92,91,90,89,88,87,82,81,80,79,72,71,67,66,65,64,63,61,60,58,56,54,52,50,46,45,42,41,38,37,28,25,22,21,20,19,16,13,12,9,6,5,4,3,1,0]
 rtaps += 1
@@ -76,7 +76,7 @@ function mickey_clock_kg( r::BitArray, s::BitArray, mixing, ib )
     
 end
 
-function mickeyInit( iv::BitArray, k::BitArray)
+function mickey_init( iv::BitArray, k::BitArray)
    
     assert( length(k) == 80 )
     assert( length(iv) == 80 )
@@ -122,7 +122,7 @@ end
 #assert_k = BitArray(80)
 #assert_iv = BitArray(80)
 
-#r, s = mickeyInit( assert_k, assert_iv )
+#r, s = mickey_init( assert_k, assert_iv )
 #z, r, s = mickey_stream( 100, r, s )
 #z
 

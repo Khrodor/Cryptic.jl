@@ -3,7 +3,7 @@ module Trivium
 export trivium_stream, trivium_init
 
 
-function trivium_stream( s::BitArray{1}, n::Int64 )
+function trivium_stream( n::Int64, s::BitArray{1} )
     
     assert( length(s) == 288 )
  
