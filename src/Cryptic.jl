@@ -14,6 +14,8 @@ using Serpent
 using Whirpool
 using Md5
 
+export SHA2, AES, PrimeTests, RandomGenerators, CipherBlocks, RSA, BCrypt, enigma, whirpool, md5, Serpent128
+
 using Mickey
 export mickey_stream, mickey_init
 
@@ -25,7 +27,5 @@ export trivium_stream, trivium_init
 
 using Salsa20
 export salsa20
-
-export SHA2, AES, PrimeTests, RandomGenerators, CipherBlocks, RSA, BCrypt, enigma, whirpool, md5, Serpent128
 
 end # module
