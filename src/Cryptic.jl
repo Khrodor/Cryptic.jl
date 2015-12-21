@@ -17,7 +17,8 @@ using Md5
 using Mickey
 export mickey_stream, mickey_init
 
-
+using Grain
+export grain_stream, grain_init
 
 export SHA2, AES, PrimeTests, RandomGenerators, CipherBlocks, RSA, BCrypt, enigma, whirpool, md5, Serpent128
 
